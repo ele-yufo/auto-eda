@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{REPORT_TITLE}} — Auto EDA Report</title>
+    <meta name="description" content="数据分析报告 — 由 Auto EDA 自动生成">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           CSS Variables — Design Token System
+           ============================================ */
+        :root {
+            /* Dark Theme (Default) */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --bg-glass: rgba(255, 255, 255, 0.06);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.12);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --info: #06b6d4;
+            --info-bg: rgba(6, 182, 212, 0.1);
+
+            /* Spacing (4px base) */
+            --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+            --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+            --sp-12: 48px; --sp-16: 64px;
+
+            /* Typography */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            --font-xs: 0.75rem; --font-sm: 0.875rem; --font-base: 1rem;
+            --font-lg: 1.125rem; --font-xl: 1.25rem; --font-2xl: 1.5rem;
+            --font-3xl: 1.875rem; --font-4xl: 2.25rem;
+
+            /* Border Radius */
+            --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-xl: 20px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(0, 0, 0, 0.02);
+            --bg-card-hover: rgba(0, 0, 0, 0.04);
+            --bg-glass: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-glow: rgba(59, 130, 246, 0.08);
+            --success-bg: rgba(34, 197, 94, 0.06);
+            --warning-bg: rgba(245, 158, 11, 0.06);
+            --danger-bg: rgba(239, 68, 68, 0.06);
+            --info-bg: rgba(6, 182, 212, 0.06);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        /* ============================================
+           Base Styles
+           ============================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: var(--font-base);
+            min-height: 100vh;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+
+        /* ============================================
+           Header
+           ============================================ */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--sp-6) var(--sp-8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: var(--font-xl);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-subtitle {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            margin-top: var(--sp-1);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: var(--sp-2) var(--sp-3);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--font-sm);
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        /* ============================================
+           Layout
+           ============================================ */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: var(--sp-8);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: var(--sp-4); }
+        }
+
+        /* ============================================
+           KPI Cards
+           ============================================ */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--sp-4);
+            margin-bottom: var(--sp-8);
+        }
+
+        .kpi-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: var(--sp-6);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kpi-card:hover::before { opacity: 1; }
+
+        .kpi-label {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--sp-2);
+        }
+
+        .kpi-value {
+            font-size: var(--font-3xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .kpi-change {
+            font-size: var(--font-sm);
+            margin-top: var(--sp-2);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-1);
+        }
+
+        .kpi-change.positive { color: var(--success); }
+        .kpi-change.negative { color: var(--danger); }
+
+        /* ============================================
+           Section — Collapsible
+           ============================================ */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--sp-6);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .section:hover { box-shadow: var(--shadow-sm); }
+
+        .section-header {
+            padding: var(--sp-5) var(--sp-6);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .section-header:hover { background: var(--bg-card-hover); }
+
+        .section-title {
+            font-size: var(--font-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+        }
+
+        .section-toggle {
+            color: var(--text-muted);
+            font-size: var(--font-lg);
+            transition: transform 0.3s;
+        }
+
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-body { display: none; }
+
+        .section-body {
+            padding: 0 var(--sp-6) var(--sp-6);
+        }
+
+        /* ============================================
+           Alert / Bias Warning
+           ============================================ */
+        .alert {
+            padding: var(--sp-4) var(--sp-5);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--sp-4);
+            font-size: var(--font-sm);
+            line-height: 1.6;
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-start;
+        }
+
+        .alert-icon { font-size: var(--font-xl); flex-shrink: 0; margin-top: 2px; }
+
+        .alert-info { background: var(--info-bg); border-left: 3px solid var(--info); }
+        .alert-success { background: var(--success-bg); border-left: 3px solid var(--success); }
+        .alert-warning { background: var(--warning-bg); border-left: 3px solid var(--warning); }
+        .alert-danger { background: var(--danger-bg); border-left: 3px solid var(--danger); }
+
+        .alert-bias {
+            background: var(--danger-bg);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-bias .alert-title {
+            font-weight: 600;
+            color: var(--danger);
+            margin-bottom: var(--sp-1);
+        }
+
+        /* ============================================
+           Confidence Badge
+           ============================================ */
+        .confidence { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--font-xs); font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+        .confidence-high { background: var(--success-bg); color: var(--success); }
+        .confidence-medium { background: var(--warning-bg); color: var(--warning); }
+        .confidence-low { background: var(--danger-bg); color: var(--danger); }
+
+        /* ============================================
+           Chart Container
+           ============================================ */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--sp-4);
+            margin-bottom: var(--sp-4);
+            text-align: center;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+        }
+
+        .chart-caption {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            margin-top: var(--sp-3);
+            font-style: italic;
+        }
+
+        .chart-insight {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            margin-top: var(--sp-3);
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--accent-glow);
+            border-radius: var(--radius-sm);
+            text-align: left;
+        }
+
+        .chart-insight::before { content: '💡 '; }
+
+        /* ============================================
+           Data Table
+           ============================================ */
+        .data-table-wrap { overflow-x: auto; margin-bottom: var(--sp-4); }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--font-sm);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: left;
+            padding: var(--sp-3) var(--sp-4);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .data-table th:hover { color: var(--accent); }
+        .data-table th .sort-arrow { margin-left: var(--sp-1); opacity: 0.4; }
+        .data-table th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+
+        .data-table td {
+            padding: var(--sp-3) var(--sp-4);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table tbody tr { transition: background 0.15s; }
+        .data-table tbody tr:hover { background: var(--bg-card-hover); }
+
+        /* ============================================
+           Action Plan
+           ============================================ */
+        .action-plan { margin-bottom: var(--sp-4); }
+
+        .action-category {
+            font-size: var(--font-sm);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: var(--sp-2) 0;
+            margin-top: var(--sp-4);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-category:first-child { margin-top: 0; }
+        .action-category.quick-win { color: var(--success); }
+        .action-category.mid-term { color: var(--accent); }
+        .action-category.long-term { color: var(--warning); }
+
+        .action-item {
+            padding: var(--sp-3) 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-start;
+        }
+
+        .action-item:last-child { border-bottom: none; }
+
+        .action-icon { font-size: var(--font-lg); flex-shrink: 0; }
+
+        .action-content { flex: 1; }
+
+        .action-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: var(--sp-1);
+        }
+
+        .action-detail {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           Sidebar Navigation
+           ============================================ */
+        @media (min-width: 1024px) {
+            .layout {
+                display: grid;
+                grid-template-columns: 220px 1fr;
+                gap: var(--sp-8);
+            }
+
+            .sidebar {
+                position: sticky;
+                top: 80px;
+                height: fit-content;
+                max-height: calc(100vh - 100px);
+                overflow-y: auto;
+            }
+
+            .sidebar-nav {
+                list-style: none;
+            }
+
+            .sidebar-nav a {
+                display: block;
+                padding: var(--sp-2) var(--sp-3);
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: var(--font-sm);
+                border-radius: var(--radius-sm);
+                border-left: 2px solid transparent;
+                transition: all 0.2s;
+            }
+
+            .sidebar-nav a:hover {
+                color: var(--text-primary);
+                background: var(--bg-card);
+            }
+
+            .sidebar-nav a.active {
+                color: var(--accent);
+                border-left-color: var(--accent);
+                background: var(--accent-glow);
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar { display: none; }
+        }
+
+        /* ============================================
+           Footer
+           ============================================ */
+        .footer {
+            text-align: center;
+            padding: var(--sp-8) var(--sp-4);
+            color: var(--text-muted);
+            font-size: var(--font-xs);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ============================================
+           Prose Content
+           ============================================ */
+        .prose { color: var(--text-secondary); }
+        .prose h3 { color: var(--text-primary); font-size: var(--font-lg); font-weight: 600; margin: var(--sp-6) 0 var(--sp-3); }
+        .prose p { margin-bottom: var(--sp-4); }
+        .prose ul { padding-left: var(--sp-6); margin-bottom: var(--sp-4); }
+        .prose li { margin-bottom: var(--sp-2); }
+        .prose strong { color: var(--text-primary); font-weight: 600; }
+        .prose code { background: var(--bg-card); padding: 2px 6px; border-radius: 4px; font-size: var(--font-sm); }
+
+        /* ============================================
+           Print Styles
+           ============================================ */
+        @media print {
+            .header, .sidebar, .theme-toggle, .section-toggle { display: none !important; }
+            .section.collapsed .section-body { display: block !important; }
+            body { background: white; color: black; }
+            .section, .kpi-card { break-inside: avoid; border-color: #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============ Header ============ -->
+    <header class="header">
+        <div class="header-inner">
+            <div>
+                <div class="header-title">{{REPORT_TITLE}}</div>
+                <div class="header-subtitle">生成日期: {{REPORT_DATE}} · Auto EDA 分析报告</div>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">🌓 主题</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="layout">
+            <!-- ============ Sidebar ============ -->
+            <aside class="sidebar">
+                <nav>
+                    <ul class="sidebar-nav" id="sidebarNav">
+                        <li><a href="#executive-summary">📊 核心发现</a></li>
+                        <li><a href="#data-overview">📋 数据概览</a></li>
+                        <li><a href="#key-findings">🔍 详细分析</a></li>
+                        <li><a href="#bias-warnings">⚠️ 偏见与风险</a></li>
+                        <li><a href="#action-plan">🎯 行动规划</a></li>
+                        <li><a href="#appendix">📎 附录</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- ============ Main Content ============ -->
+            <main>
+                <!-- KPI Cards -->
+                <section id="executive-summary">
+                    <div class="kpi-grid">
+                        <!-- {{KPI_CARDS}}
+                        Agent 动态填充，每个 KPI 格式如下：
+                        <div class="kpi-card">
+                            <div class="kpi-label">关键指标名称</div>
+                            <div class="kpi-value">123,456</div>
+                            <div class="kpi-change positive">↑ 12.3% vs 上月</div>
+                        </div>
+                        -->
+                    </div>
+                </section>
+
+                <!-- Executive Summary -->
+                <div class="section" id="summary-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">📊 核心发现摘要</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="prose">
+                            <!-- {{EXECUTIVE_SUMMARY}}
+                            Agent 用 SCQA 框架组织：
+                            <h3>一个关键数字</h3>
+                            <p><strong>{{KEY_NUMBER}}</strong> — 一句话解读</p>
+                            
+                            <h3>核心发现</h3>
+                            <ul>
+                                <li><span class="confidence confidence-high">🟢 强证据</span> 发现 1</li>
+                                <li><span class="confidence confidence-medium">🟡 弱暗示</span> 发现 2</li>
+                            </ul>
+                            -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Overview -->
+                <div class="section" id="data-overview">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">📋 数据概览</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <!-- {{DATA_OVERVIEW}}
+                        Agent 填充数据画像：行数、列数、缺失值、数据类型分布
+                        使用 .data-table 和 .chart-container 组件
+                        -->
+                    </div>
+                </div>
+
+                <!-- Key Findings (Repeatable Sections) -->
+                <div class="section" id="key-findings">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">🔍 详细分析</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <!-- {{ANALYSIS_SECTIONS}}
+                        Agent 重复以下结构，每个发现一个块：
+                        
+                        <h3>发现标题 <span class="confidence confidence-high">🟢 强证据</span></h3>
+                        <div class="chart-container">
+                            <img src="data:image/png;base64,{{BASE64_CHART}}" alt="图表描述">
+                            <div class="chart-insight">So What: 这意味着...</div>
+                        </div>
+                        <p>详细解读文字...</p>
+                        -->
+                    </div>
+                </div>
+
+                <!-- Bias Warnings -->
+                <div class="section" id="bias-warnings">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">⚠️ 偏见与局限性声明</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <!-- {{BIAS_WARNINGS}}
+                        Agent 填充在分析过程中发现的偏见风险：
+                        
+                        <div class="alert alert-bias">
+                            <span class="alert-icon">⚠️</span>
+                            <div>
+                                <div class="alert-title">采样偏差风险</div>
+                                <p>数据仅包含线上渠道的客户，不能代表全部客户群体。
+                                   本报告的结论仅适用于线上客户。</p>
+                            </div>
+                        </div>
+                        -->
+                        
+                        <div class="alert alert-info">
+                            <span class="alert-icon">ℹ️</span>
+                            <div>
+                                <p>本报告由 Auto EDA 自动生成。所有统计结论均附带信心等级标注。
+                                   建议对"弱暗示"级别的发现用独立数据集进行验证后再做决策。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Plan -->
+                <div class="section" id="action-plan">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">🎯 行动规划</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="action-plan">
+                            <!-- {{ACTION_PLAN}}
+                            Agent 按优先级填充：
+
+                            <div class="action-category quick-win">⚡ Quick Win（本周可执行）</div>
+                            <div class="action-item">
+                                <span class="action-icon">🎯</span>
+                                <div class="action-content">
+                                    <div class="action-title">行动建议标题</div>
+                                    <div class="action-detail">预期影响：... · 所需资源：...</div>
+                                </div>
+                            </div>
+
+                            <div class="action-category mid-term">📅 中期（1-3 个月）</div>
+                            ...
+
+                            <div class="action-category long-term">🔭 长期 & 后续分析</div>
+                            ...
+                            -->
+                        </div>
+
+                        <!-- Unanswered Questions -->
+                        <div class="alert alert-warning" style="margin-top: var(--sp-6);">
+                            <span class="alert-icon">❓</span>
+                            <div>
+                                <strong>未回答的问题 & 后续分析方向</strong>
+                                <!-- {{UNANSWERED_QUESTIONS}}
+                                <ul>
+                                    <li>问题 1 — 建议的分析方法</li>
+                                    <li>问题 2 — 需要的额外数据</li>
+                                </ul>
+                                -->
+                            </div>
+                        </div>
+
+                        <!-- Monitoring -->
+                        <div class="alert alert-info" style="margin-top: var(--sp-4);">
+                            <span class="alert-icon">📊</span>
+                            <div>
+                                <strong>建议持续监控的指标</strong>
+                                <!-- {{MONITORING_METRICS}}
+                                <ul>
+                                    <li>指标 1 — 监控频率 — 预警阈值</li>
+                                </ul>
+                                -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appendix -->
+                <div class="section collapsed" id="appendix">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">📎 附录：技术细节</div>
+                        <span class="section-toggle">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="prose">
+                            <!-- {{APPENDIX}}
+                            Agent 放置技术细节：
+                            - 使用的统计方法说明
+                            - 数据清洗步骤
+                            - 完整的统计检验结果
+                            - 模型超参数和交叉验证结果
+                            -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Auto EDA · 数据分析报告 · {{REPORT_DATE}}</p>
+        <p>本报告自动生成，所有结论附带信心等级标注，请结合业务判断使用。</p>
+    </footer>
+
+    <!-- ============ JavaScript ============ -->
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('auto-eda-theme', next);
+        }
+
+        // Restore saved theme
+        (function() {
+            const saved = localStorage.getItem('auto-eda-theme');
+            if (saved) document.documentElement.setAttribute('data-theme', saved);
+        })();
+
+        // Section Toggle
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('collapsed');
+        }
+
+        // Sidebar Active State
+        (function() {
+            const sections = document.querySelectorAll('.section[id], section[id]');
+            const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => link.classList.remove('active'));
+                        const activeLink = document.querySelector(`.sidebar-nav a[href="#${entry.target.id}"]`);
+                        if (activeLink) activeLink.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-20% 0px -80% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+        })();
+
+        // Table Sorting
+        document.querySelectorAll('.data-table th').forEach(th => {
+            th.addEventListener('click', function() {
+                const table = this.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                const idx = Array.from(this.parentElement.children).indexOf(this);
+                const asc = !this.classList.contains('sorted-asc');
+
+                // Reset all headers
+                table.querySelectorAll('th').forEach(h => {
+                    h.classList.remove('sorted', 'sorted-asc', 'sorted-desc');
+                });
+
+                this.classList.add('sorted', asc ? 'sorted-asc' : 'sorted-desc');
+
+                rows.sort((a, b) => {
+                    const aVal = a.children[idx]?.textContent.trim() || '';
+                    const bVal = b.children[idx]?.textContent.trim() || '';
+                    const aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
+                    const bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
+
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return asc ? aNum - bNum : bNum - aNum;
+                    }
+                    return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                });
+
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+    </script>
+</body>
+</html>
