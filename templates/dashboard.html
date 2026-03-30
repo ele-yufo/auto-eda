@@ -5,21 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{REPORT_TITLE}} — Auto EDA Report</title>
     <meta name="description" content="数据分析报告 — 由 Auto EDA 自动生成">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!--
+    ╔═══════════════════════════════════════════════════════════╗
+    ║  Dashboard 结构骨架                                        ║
+    ║  这是一个 **纯结构模板**，提供组件和布局规范。                    ║
+    ║  Agent 每次生成 Dashboard 时必须根据业务场景定制美学方向：         ║
+    ║    - 选择有辨识度的 Google Fonts 字体组合                      ║
+    ║    - 制定 2-3 主色 + 1 强调色的色板                           ║
+    ║    - 设计符合业务调性的背景和氛围                               ║
+    ║  参考 SKILL.md 前端美学章节的指引。                            ║
+    ╚═══════════════════════════════════════════════════════════╝
+    -->
+    <!-- Agent: 在此处替换为你选择的 Google Fonts 链接 -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=YOUR_DISPLAY_FONT&family=YOUR_BODY_FONT&display=swap" rel="stylesheet"> -->
     <style>
         /* ============================================
            CSS Variables — Design Token System
+           Agent: 每次都要根据业务场景重新定义这些变量。
+           以下是结构性默认值，不是最终样式。
            ============================================ */
         :root {
-            /* Dark Theme (Default) */
+            /* Dark Theme (Default) — Agent 必须根据业务调性重新配色 */
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-card: rgba(255, 255, 255, 0.04);
             --bg-card-hover: rgba(255, 255, 255, 0.08);
-            --bg-glass: rgba(255, 255, 255, 0.06);
             --border-color: rgba(255, 255, 255, 0.08);
-            --border-glass: rgba(255, 255, 255, 0.12);
 
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
@@ -41,8 +52,9 @@
             --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
             --sp-12: 48px; --sp-16: 64px;
 
-            /* Typography */
-            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            /* Typography — Agent: 必须替换为项目专属字体 */
+            --font-display: sans-serif;
+            --font-body: sans-serif;
             --font-xs: 0.75rem; --font-sm: 0.875rem; --font-base: 1rem;
             --font-lg: 1.125rem; --font-xl: 1.25rem; --font-2xl: 1.5rem;
             --font-3xl: 1.875rem; --font-4xl: 2.25rem;
@@ -61,9 +73,7 @@
             --bg-secondary: #ffffff;
             --bg-card: rgba(0, 0, 0, 0.02);
             --bg-card-hover: rgba(0, 0, 0, 0.04);
-            --bg-glass: rgba(255, 255, 255, 0.8);
             --border-color: rgba(0, 0, 0, 0.08);
-            --border-glass: rgba(0, 0, 0, 0.1);
             --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-muted: #94a3b8;
@@ -81,11 +91,10 @@
            Base Styles
            ============================================ */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: var(--font-family);
+            font-family: var(--font-body);
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.7;
@@ -107,8 +116,6 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
         }
 
         .header-inner {
@@ -120,6 +127,7 @@
         }
 
         .header-title {
+            font-family: var(--font-display);
             font-size: var(--font-xl);
             font-weight: 700;
             color: var(--text-primary);
@@ -131,11 +139,7 @@
             margin-top: var(--sp-1);
         }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: var(--sp-3);
-        }
+        .header-actions { display: flex; align-items: center; gap: var(--sp-3); }
 
         .theme-toggle {
             background: var(--bg-card);
@@ -147,24 +151,13 @@
             font-size: var(--font-sm);
             transition: all 0.2s;
         }
-
-        .theme-toggle:hover {
-            background: var(--bg-card-hover);
-            color: var(--text-primary);
-        }
+        .theme-toggle:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 
         /* ============================================
            Layout
            ============================================ */
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: var(--sp-8);
-        }
-
-        @media (max-width: 768px) {
-            .container { padding: var(--sp-4); }
-        }
+        .container { max-width: 1280px; margin: 0 auto; padding: var(--sp-8); }
+        @media (max-width: 768px) { .container { padding: var(--sp-4); } }
 
         /* ============================================
            KPI Cards
@@ -177,10 +170,8 @@
         }
 
         .kpi-card {
-            background: var(--bg-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: var(--sp-6);
             position: relative;
@@ -191,20 +182,14 @@
         .kpi-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 3px;
             background: var(--accent);
             opacity: 0;
             transition: opacity 0.2s;
         }
 
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .kpi-card:hover::before { opacity: 1; }
 
         .kpi-label {
@@ -216,6 +201,7 @@
         }
 
         .kpi-value {
+            font-family: var(--font-display);
             font-size: var(--font-3xl);
             font-weight: 700;
             color: var(--text-primary);
@@ -229,7 +215,6 @@
             align-items: center;
             gap: var(--sp-1);
         }
-
         .kpi-change.positive { color: var(--success); }
         .kpi-change.negative { color: var(--danger); }
 
@@ -244,7 +229,6 @@
             overflow: hidden;
             transition: box-shadow 0.2s;
         }
-
         .section:hover { box-shadow: var(--shadow-sm); }
 
         .section-header {
@@ -256,10 +240,10 @@
             user-select: none;
             transition: background 0.2s;
         }
-
         .section-header:hover { background: var(--bg-card-hover); }
 
         .section-title {
+            font-family: var(--font-display);
             font-size: var(--font-lg);
             font-weight: 600;
             color: var(--text-primary);
@@ -268,18 +252,10 @@
             gap: var(--sp-2);
         }
 
-        .section-toggle {
-            color: var(--text-muted);
-            font-size: var(--font-lg);
-            transition: transform 0.3s;
-        }
-
+        .section-toggle { color: var(--text-muted); font-size: var(--font-lg); transition: transform 0.3s; }
         .section.collapsed .section-toggle { transform: rotate(-90deg); }
         .section.collapsed .section-body { display: none; }
-
-        .section-body {
-            padding: 0 var(--sp-6) var(--sp-6);
-        }
+        .section-body { padding: 0 var(--sp-6) var(--sp-6); }
 
         /* ============================================
            Alert / Bias Warning
@@ -294,9 +270,7 @@
             gap: var(--sp-3);
             align-items: flex-start;
         }
-
         .alert-icon { font-size: var(--font-xl); flex-shrink: 0; margin-top: 2px; }
-
         .alert-info { background: var(--info-bg); border-left: 3px solid var(--info); }
         .alert-success { background: var(--success-bg); border-left: 3px solid var(--success); }
         .alert-warning { background: var(--warning-bg); border-left: 3px solid var(--warning); }
@@ -307,12 +281,7 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-left: 4px solid var(--danger);
         }
-
-        .alert-bias .alert-title {
-            font-weight: 600;
-            color: var(--danger);
-            margin-bottom: var(--sp-1);
-        }
+        .alert-bias .alert-title { font-weight: 600; color: var(--danger); margin-bottom: var(--sp-1); }
 
         /* ============================================
            Confidence Badge
@@ -333,20 +302,8 @@
             margin-bottom: var(--sp-4);
             text-align: center;
         }
-
-        .chart-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: var(--radius-sm);
-        }
-
-        .chart-caption {
-            font-size: var(--font-sm);
-            color: var(--text-muted);
-            margin-top: var(--sp-3);
-            font-style: italic;
-        }
-
+        .chart-container img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+        .chart-caption { font-size: var(--font-sm); color: var(--text-muted); margin-top: var(--sp-3); font-style: italic; }
         .chart-insight {
             font-size: var(--font-sm);
             color: var(--text-secondary);
@@ -356,20 +313,13 @@
             border-radius: var(--radius-sm);
             text-align: left;
         }
-
         .chart-insight::before { content: '💡 '; }
 
         /* ============================================
            Data Table
            ============================================ */
         .data-table-wrap { overflow-x: auto; margin-bottom: var(--sp-4); }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: var(--font-sm);
-        }
-
+        .data-table { width: 100%; border-collapse: collapse; font-size: var(--font-sm); }
         .data-table th {
             background: var(--bg-secondary);
             color: var(--text-secondary);
@@ -383,17 +333,10 @@
             user-select: none;
             white-space: nowrap;
         }
-
         .data-table th:hover { color: var(--accent); }
         .data-table th .sort-arrow { margin-left: var(--sp-1); opacity: 0.4; }
         .data-table th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
-
-        .data-table td {
-            padding: var(--sp-3) var(--sp-4);
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
+        .data-table td { padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
         .data-table tbody tr { transition: background 0.15s; }
         .data-table tbody tr:hover { background: var(--bg-card-hover); }
 
@@ -401,17 +344,11 @@
            Action Plan
            ============================================ */
         .action-plan { margin-bottom: var(--sp-4); }
-
         .action-category {
-            font-size: var(--font-sm);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: var(--sp-2) 0;
-            margin-top: var(--sp-4);
-            border-bottom: 1px solid var(--border-color);
+            font-size: var(--font-sm); font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: var(--sp-2) 0;
+            margin-top: var(--sp-4); border-bottom: 1px solid var(--border-color);
         }
-
         .action-category:first-child { margin-top: 0; }
         .action-category.quick-win { color: var(--success); }
         .action-category.mid-term { color: var(--accent); }
@@ -420,93 +357,37 @@
         .action-item {
             padding: var(--sp-3) 0;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: var(--sp-3);
-            align-items: flex-start;
+            display: flex; gap: var(--sp-3); align-items: flex-start;
         }
-
         .action-item:last-child { border-bottom: none; }
-
         .action-icon { font-size: var(--font-lg); flex-shrink: 0; }
-
         .action-content { flex: 1; }
-
-        .action-title {
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: var(--sp-1);
-        }
-
-        .action-detail {
-            font-size: var(--font-sm);
-            color: var(--text-secondary);
-        }
+        .action-title { font-weight: 500; color: var(--text-primary); margin-bottom: var(--sp-1); }
+        .action-detail { font-size: var(--font-sm); color: var(--text-secondary); }
 
         /* ============================================
            Sidebar Navigation
            ============================================ */
         @media (min-width: 1024px) {
-            .layout {
-                display: grid;
-                grid-template-columns: 220px 1fr;
-                gap: var(--sp-8);
-            }
-
-            .sidebar {
-                position: sticky;
-                top: 80px;
-                height: fit-content;
-                max-height: calc(100vh - 100px);
-                overflow-y: auto;
-            }
-
-            .sidebar-nav {
-                list-style: none;
-            }
-
+            .layout { display: grid; grid-template-columns: 220px 1fr; gap: var(--sp-8); }
+            .sidebar { position: sticky; top: 80px; height: fit-content; max-height: calc(100vh - 100px); overflow-y: auto; }
+            .sidebar-nav { list-style: none; }
             .sidebar-nav a {
-                display: block;
-                padding: var(--sp-2) var(--sp-3);
-                color: var(--text-muted);
-                text-decoration: none;
-                font-size: var(--font-sm);
-                border-radius: var(--radius-sm);
-                border-left: 2px solid transparent;
-                transition: all 0.2s;
+                display: block; padding: var(--sp-2) var(--sp-3);
+                color: var(--text-muted); text-decoration: none; font-size: var(--font-sm);
+                border-radius: var(--radius-sm); border-left: 2px solid transparent; transition: all 0.2s;
             }
-
-            .sidebar-nav a:hover {
-                color: var(--text-primary);
-                background: var(--bg-card);
-            }
-
-            .sidebar-nav a.active {
-                color: var(--accent);
-                border-left-color: var(--accent);
-                background: var(--accent-glow);
-            }
+            .sidebar-nav a:hover { color: var(--text-primary); background: var(--bg-card); }
+            .sidebar-nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
         }
-
-        @media (max-width: 1023px) {
-            .sidebar { display: none; }
-        }
+        @media (max-width: 1023px) { .sidebar { display: none; } }
 
         /* ============================================
-           Footer
+           Footer & Prose
            ============================================ */
-        .footer {
-            text-align: center;
-            padding: var(--sp-8) var(--sp-4);
-            color: var(--text-muted);
-            font-size: var(--font-xs);
-            border-top: 1px solid var(--border-color);
-        }
-
-        /* ============================================
-           Prose Content
-           ============================================ */
+        .footer { text-align: center; padding: var(--sp-8) var(--sp-4); color: var(--text-muted); font-size: var(--font-xs); border-top: 1px solid var(--border-color); }
         .prose { color: var(--text-secondary); }
-        .prose h3 { color: var(--text-primary); font-size: var(--font-lg); font-weight: 600; margin: var(--sp-6) 0 var(--sp-3); }
+        .prose h3 { font-family: var(--font-display); color: var(--text-primary); font-size: var(--font-lg); font-weight: 600; margin: var(--sp-6) 0 var(--sp-3); }
         .prose p { margin-bottom: var(--sp-4); }
         .prose ul { padding-left: var(--sp-6); margin-bottom: var(--sp-4); }
         .prose li { margin-bottom: var(--sp-2); }
@@ -579,10 +460,10 @@
                     <div class="section-body">
                         <div class="prose">
                             <!-- {{EXECUTIVE_SUMMARY}}
-                            Agent 用 SCQA 框架组织：
+                            Agent 用 SCQA 框架组织单个发现：
                             <h3>一个关键数字</h3>
                             <p><strong>{{KEY_NUMBER}}</strong> — 一句话解读</p>
-                            
+
                             <h3>核心发现</h3>
                             <ul>
                                 <li><span class="confidence confidence-high">🟢 强证据</span> 发现 1</li>
@@ -616,7 +497,7 @@
                     <div class="section-body">
                         <!-- {{ANALYSIS_SECTIONS}}
                         Agent 重复以下结构，每个发现一个块：
-                        
+
                         <h3>发现标题 <span class="confidence confidence-high">🟢 强证据</span></h3>
                         <div class="chart-container">
                             <img src="data:image/png;base64,{{BASE64_CHART}}" alt="图表描述">
@@ -636,7 +517,7 @@
                     <div class="section-body">
                         <!-- {{BIAS_WARNINGS}}
                         Agent 填充在分析过程中发现的偏见风险：
-                        
+
                         <div class="alert alert-bias">
                             <span class="alert-icon">⚠️</span>
                             <div>
@@ -646,7 +527,7 @@
                             </div>
                         </div>
                         -->
-                        
+
                         <div class="alert alert-info">
                             <span class="alert-icon">ℹ️</span>
                             <div>
@@ -769,7 +650,6 @@
         (function() {
             const sections = document.querySelectorAll('.section[id], section[id]');
             const navLinks = document.querySelectorAll('.sidebar-nav a');
-
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -779,7 +659,6 @@
                     }
                 });
             }, { rootMargin: '-20% 0px -80% 0px' });
-
             sections.forEach(section => observer.observe(section));
         })();
 
@@ -792,11 +671,7 @@
                 const idx = Array.from(this.parentElement.children).indexOf(this);
                 const asc = !this.classList.contains('sorted-asc');
 
-                // Reset all headers
-                table.querySelectorAll('th').forEach(h => {
-                    h.classList.remove('sorted', 'sorted-asc', 'sorted-desc');
-                });
-
+                table.querySelectorAll('th').forEach(h => h.classList.remove('sorted', 'sorted-asc', 'sorted-desc'));
                 this.classList.add('sorted', asc ? 'sorted-asc' : 'sorted-desc');
 
                 rows.sort((a, b) => {
@@ -804,13 +679,9 @@
                     const bVal = b.children[idx]?.textContent.trim() || '';
                     const aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
                     const bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
-
-                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                        return asc ? aNum - bNum : bNum - aNum;
-                    }
+                    if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
                     return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
                 });
-
                 rows.forEach(row => tbody.appendChild(row));
             });
         });
