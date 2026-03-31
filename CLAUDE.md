@@ -62,7 +62,7 @@ Scout 返回后，主 Agent：
 
 ### Phase 2：访谈对齐（主 Agent 直接执行）
 
-参考 `references/interview-protocol.md` Phase 1：
+参考 `skills/auto-eda/references/interview-protocol.md` Phase 1：
 - 展示 Scout 发现的惊喜点 → 开放式引导 → 对齐分析目标
 - 用"五个为什么"深挖需求
 - 确认对齐检查点（业务背景、分析类型、关键决策、成功标准、受众）
@@ -71,9 +71,9 @@ Scout 返回后，主 Agent：
 
 这是核心价值所在，主 Agent 保持完整上下文：
 
-1. **参考 `references/analysis-playbook.md`** 选择分析路径
+1. **参考 `skills/auto-eda/references/analysis-playbook.md`** 选择分析路径
 2. **实时编写代码** 执行分析（Habit 4：代码就是分析）
-3. **每步检查偏见** 参考 `references/bias-and-pitfalls.md` 速查清单
+3. **每步检查偏见** 参考 `skills/auto-eda/references/bias-and-pitfalls.md` 速查清单
 4. **中途对齐** 每发现重要 insight 与用户同步（参考 interview-protocol Phase 2）
 5. **按需参考** 其他 references（统计方法、时序分析、业务框架等）
 
@@ -104,8 +104,8 @@ Reviewer 返回后：
 主 Agent 根据分析结果生成 Dashboard：
 
 1. 参考 SKILL.md 前端美学指南确定设计方向
-2. 参考 `templates/dashboard.html` 的结构骨架
-3. 参考 `examples/example-dashboard.html` 的具体渲染效果
+2. 参考 `skills/auto-eda/templates/dashboard.html` 的结构骨架
+3. 参考 `skills/auto-eda/examples/example-dashboard.html` 的具体渲染效果
 4. 生成 `report.html` + 更新 `_eda_findings.md`
 
 **图表策略**：
@@ -126,7 +126,7 @@ Dashboard 生成后，调度 Reviewer 做交付审查：
 
 ### Phase 7：交付与收尾（主 Agent 直接执行）
 
-参考 `references/interview-protocol.md` Phase 3：
+参考 `skills/auto-eda/references/interview-protocol.md` Phase 3：
 - Dashboard 导览（核心数字 + 关键发现 + 局限 + Quick Win）
 - 收集反馈、处理修改请求
 - 更新 `_eda_state.md`
@@ -146,7 +146,7 @@ Dashboard 生成后，调度 Reviewer 做交付审查：
 ### 调度方式
 
 使用 Agent 工具调度 subagent，在 prompt 中包含：
-- 指向 `agents/data-scout.md` 或 `agents/reviewer.md` 的完整指引
+- 指向 `skills/auto-eda/agents/data-scout.md` 或 `skills/auto-eda/agents/reviewer.md` 的完整指引
 - 需要处理的数据/内容
 - 期望的输出格式
 
@@ -159,7 +159,7 @@ Dashboard 生成后，调度 Reviewer 做交付审查：
 
 ## 核心参考文档
 
-主 Agent 的行为规范、三个面孔、五个习惯、信心等级定义 → 参见 `SKILL.md`。
+主 Agent 的行为规范、三个面孔、五个习惯、信心等级定义 → 参见 `skills/auto-eda/SKILL.md`。
 
 参考文档按需加载 → 参见 SKILL.md 底部的参考文档索引。
 
