@@ -1,0 +1,14 @@
+{
+  "name": "auto-eda",
+  "version": "2.0.0",
+  "description": "Subagent-Driven 数据分析团队 — 让 AI Agent 像老练的数据科学家一样工作",
+  "author": "ele-yufo",
+  "repository": "ele-yufo/auto-eda",
+  "license": "MIT",
+  "skills": [
+    "skills/auto-eda"
+  ],
+  "hooks": {
+    "session-start": "hooks/session-start"
+  }
+}

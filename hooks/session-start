@@ -1,0 +1,9 @@
+#!/bin/bash
+# Auto EDA — Session Start Hook
+# 当 Claude Code 会话启动时，自动检查是否有待继续的分析任务。
+
+# 检查当前目录是否有 EDA 状态文件
+if [ -f "_eda_state.md" ]; then
+  echo "📊 Auto EDA: 检测到未完成的分析状态 (_eda_state.md)。"
+  echo "   建议输入 '继续分析' 来恢复之前的工作。"
+fi
