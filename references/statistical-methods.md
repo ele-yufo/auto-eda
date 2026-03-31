@@ -219,3 +219,144 @@ shap.plots.waterfall(shap_values[0])  # 单个样本的预测解释
 - ⚠️ 如果模型本身有数据泄漏，SHAP 解释也会误导
 - ⚠️ 高度相关的特征会分散 SHAP 值——先检查多重共线性
 - 在 Dashboard 中优先展示 bar 图（全局重要性），蜂群图放附录
+
+---
+
+## 八、Bootstrap 与置换检验
+
+> 当数据不满足参数检验假设（非正态、小样本、分布未知）时，Bootstrap 和置换检验是强大的替代工具。
+
+### 8.1 何时使用
+
+| 场景 | 推荐方法 |
+|------|---------|
+| 估计统计量的置信区间（均值、中位数、比率） | Bootstrap |
+| 小样本下检验两组差异 | 置换检验 |
+| 不确定分布是否满足参数假设 | 两者皆可 |
+| 需要向非技术受众解释"为什么这个结论可靠" | Bootstrap（直觉好理解） |
+
+### 8.2 Bootstrap 置信区间
+
+```python
+import numpy as np
+
+def bootstrap_ci(data, stat_func=np.mean, n_boot=10000, ci=95):
+    """计算 Bootstrap 置信区间"""
+    boot_stats = [stat_func(np.random.choice(data, size=len(data), replace=True))
+                  for _ in range(n_boot)]
+    lower = np.percentile(boot_stats, (100 - ci) / 2)
+    upper = np.percentile(boot_stats, 100 - (100 - ci) / 2)
+    return lower, upper
+
+# 使用示例
+ci_low, ci_high = bootstrap_ci(df['revenue'].dropna().values)
+print(f"均值的 95% Bootstrap 置信区间: [{ci_low:.2f}, {ci_high:.2f}]")
+```
+
+**业务语言**："我们用 10000 次随机重采样来估计这个指标的可靠范围——真实值很可能在 [X, Y] 之间。"
+
+### 8.3 置换检验
+
+```python
+def permutation_test(group_a, group_b, n_perm=10000):
+    """检验两组差异是否显著"""
+    observed_diff = np.mean(group_a) - np.mean(group_b)
+    combined = np.concatenate([group_a, group_b])
+    perm_diffs = []
+    for _ in range(n_perm):
+        np.random.shuffle(combined)
+        perm_diffs.append(np.mean(combined[:len(group_a)]) - np.mean(combined[len(group_a):]))
+    p_value = np.mean(np.abs(perm_diffs) >= np.abs(observed_diff))
+    return observed_diff, p_value
+```
+
+**业务语言**："我们随机打乱分组 10000 次，看有多少次偶然产生的差异比实际差异更大。如果很少（< 5%），说明这个差异不太可能是偶然的。"
+
+---
+
+## 九、贝叶斯方法入门
+
+> 当样本小或有合理的先验知识时，贝叶斯方法比频率方法更有用。
+
+### 9.1 何时考虑贝叶斯
+
+| 场景 | 推荐 |
+|------|------|
+| A/B 测试样本很小（< 100/组） | 贝叶斯 A/B 测试 |
+| 有强先验（"历史转化率约 3%"） | 贝叶斯更新 |
+| 需要说"A 比 B 好的概率是 X%" | 贝叶斯（频率方法无法给出这种结论） |
+| 大样本 + 无先验信息 | 频率方法就够了 |
+
+### 9.2 贝叶斯 A/B 测试（转化率）
+
+```python
+from scipy import stats
+
+# Beta-Binomial 模型
+# 先验：Beta(1, 1)（均匀先验，无偏向）
+# 数据：A 组 50/1000 转化，B 组 65/1000 转化
+a_alpha, a_beta = 1 + 50, 1 + (1000 - 50)   # A 的后验
+b_alpha, b_beta = 1 + 65, 1 + (1000 - 65)   # B 的后验
+
+# 蒙特卡洛模拟：B 比 A 好的概率
+a_samples = np.random.beta(a_alpha, a_beta, 100000)
+b_samples = np.random.beta(b_alpha, b_beta, 100000)
+prob_b_better = np.mean(b_samples > a_samples)
+print(f"B 方案优于 A 的概率: {prob_b_better:.1%}")
+
+# B 比 A 好多少
+lift = (b_samples - a_samples) / a_samples
+print(f"预期提升: {np.mean(lift):.1%} (90% 区间: [{np.percentile(lift, 5):.1%}, {np.percentile(lift, 95):.1%}])")
+```
+
+**业务语言**："根据目前的数据，B 方案优于 A 的概率是 92%。如果 B 确实更好，预期提升在 10%-40% 之间。"
+
+### 9.3 Agent 行为
+
+- 当样本量小且用户有先验知识时，主动提议贝叶斯方法
+- 贝叶斯结果和频率结果可以同时报告——它们是互补的
+- 用"概率"语言沟通，比 p-value 更直觉
+
+---
+
+## 十、生存分析
+
+> 当分析"客户生命周期"、"设备故障时间"等"事件发生时间"的问题时使用。
+
+### 10.1 何时使用
+
+| 场景 | 方法 |
+|------|------|
+| "客户平均多久会流失？" | Kaplan-Meier 生存曲线 |
+| "哪些因素影响客户留存时间？" | Cox 比例风险模型 |
+| "不同方案的留存率有差异吗？" | Log-rank 检验 |
+
+### 10.2 关键概念
+
+```python
+from lifelines import KaplanMeierFitter, CoxPHFitter
+
+# Kaplan-Meier 生存曲线
+kmf = KaplanMeierFitter()
+kmf.fit(
+    durations=df['tenure_days'],     # 持续时间
+    event_observed=df['churned'],     # 事件是否发生（1=流失, 0=仍在）
+)
+kmf.plot_survival_function()
+print(f"中位生存时间: {kmf.median_survival_time_:.0f} 天")
+
+# Cox 回归（多因素）
+cph = CoxPHFitter()
+cph.fit(df[['tenure_days', 'churned', 'age', 'plan_type', 'usage']],
+        duration_col='tenure_days', event_col='churned')
+cph.print_summary()
+```
+
+**业务语言**：
+- "50% 的客户在注册后 180 天内流失"（中位生存时间）
+- "高级套餐用户的流失风险比基础套餐低 40%"（风险比 HR=0.6）
+
+### 10.3 注意事项
+
+- ⚠️ 生存分析最大的特点是能正确处理**右删失数据**——那些"还没流失但观察期结束"的客户。简单计算"流失率"会忽略这些客户
+- ⚠️ 比较两组生存曲线用 log-rank 检验，不用 t-test

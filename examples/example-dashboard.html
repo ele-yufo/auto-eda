@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电商用户行为分析报告 — Auto EDA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0c1220;
+            --bg-secondary: #151d2e;
+            --bg-card: rgba(255,255,255,0.03);
+            --bg-card-hover: rgba(255,255,255,0.06);
+            --border-color: rgba(255,255,255,0.06);
+            --text-primary: #edf2f7;
+            --text-secondary: #8b9dc3;
+            --text-muted: #5a6d8a;
+            --accent: #f97316;
+            --accent-glow: rgba(249,115,22,0.12);
+            --success: #10b981; --success-bg: rgba(16,185,129,0.1);
+            --warning: #f59e0b; --warning-bg: rgba(245,158,11,0.1);
+            --danger: #ef4444; --danger-bg: rgba(239,68,68,0.1);
+            --info: #06b6d4; --info-bg: rgba(6,182,212,0.1);
+            --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Noto Sans SC', sans-serif;
+            --font-sm: 0.875rem; --font-base: 1rem; --font-lg: 1.125rem;
+            --font-xl: 1.25rem; --font-3xl: 1.875rem; --font-4xl: 2.5rem;
+            --radius-md: 10px; --radius-lg: 16px;
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        [data-theme="light"] {
+            --bg-primary: #faf8f5; --bg-secondary: #ffffff;
+            --bg-card: rgba(0,0,0,0.02); --bg-card-hover: rgba(0,0,0,0.04);
+            --border-color: rgba(0,0,0,0.06);
+            --text-primary: #1a1a2e; --text-secondary: #4a5568; --text-muted: #a0aec0;
+            --accent-glow: rgba(249,115,22,0.06);
+            --success-bg: rgba(16,185,129,0.06); --warning-bg: rgba(245,158,11,0.06);
+            --danger-bg: rgba(239,68,68,0.06); --info-bg: rgba(6,182,212,0.06);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; }
+        .header { background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); padding: var(--sp-5) var(--sp-8); position: sticky; top: 0; z-index: 100; }
+        .header-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-family: var(--font-display); font-size: var(--font-xl); font-weight: 700; }
+        .header-subtitle { font-size: var(--font-sm); color: var(--text-muted); margin-top: 2px; }
+        .theme-toggle { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: var(--font-sm); }
+        .container { max-width: 1200px; margin: 0 auto; padding: var(--sp-8); }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-8); }
+        .kpi-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--sp-6); position: relative; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+        .kpi-card:nth-child(1)::before { background: var(--accent); }
+        .kpi-card:nth-child(2)::before { background: var(--success); }
+        .kpi-card:nth-child(3)::before { background: var(--info); }
+        .kpi-card:nth-child(4)::before { background: var(--warning); }
+        .kpi-label { font-size: var(--font-sm); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--sp-2); }
+        .kpi-value { font-family: var(--font-display); font-size: var(--font-3xl); font-weight: 700; line-height: 1.2; }
+        .kpi-change { font-size: var(--font-sm); margin-top: var(--sp-2); }
+        .kpi-change.positive { color: var(--success); }
+        .kpi-change.negative { color: var(--danger); }
+
+        .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: var(--sp-6); overflow: hidden; }
+        .section-header { padding: var(--sp-5) var(--sp-6); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-header:hover { background: var(--bg-card-hover); }
+        .section-title { font-family: var(--font-display); font-size: var(--font-lg); font-weight: 600; }
+        .section-toggle { color: var(--text-muted); }
+        .section.collapsed .section-body { display: none; }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section-body { padding: 0 var(--sp-6) var(--sp-6); }
+        .section-body p { margin-bottom: var(--sp-4); color: var(--text-secondary); }
+        .section-body h3 { font-family: var(--font-display); margin: var(--sp-6) 0 var(--sp-3); font-size: var(--font-lg); }
+
+        .confidence { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 500; padding: 2px 10px; border-radius: 999px; }
+        .confidence-high { background: var(--success-bg); color: var(--success); }
+        .confidence-medium { background: var(--warning-bg); color: var(--warning); }
+        .confidence-low { background: var(--danger-bg); color: var(--danger); }
+
+        .chart-placeholder { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--sp-8) var(--sp-4); text-align: center; margin-bottom: var(--sp-4); color: var(--text-muted); font-size: var(--font-sm); min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        .chart-insight { font-size: var(--font-sm); color: var(--text-secondary); padding: var(--sp-3) var(--sp-4); background: var(--accent-glow); border-radius: 6px; text-align: left; margin-bottom: var(--sp-4); }
+        .chart-insight::before { content: '💡 '; }
+
+        .alert { padding: var(--sp-4) var(--sp-5); border-radius: var(--radius-md); margin-bottom: var(--sp-4); font-size: var(--font-sm); line-height: 1.6; display: flex; gap: var(--sp-3); }
+        .alert-icon { font-size: var(--font-xl); flex-shrink: 0; }
+        .alert-warning { background: var(--warning-bg); border-left: 3px solid var(--warning); }
+        .alert-danger { background: var(--danger-bg); border-left: 3px solid var(--danger); }
+        .alert-info { background: var(--info-bg); border-left: 3px solid var(--info); }
+        .alert-bias { background: var(--danger-bg); border: 1px solid rgba(239,68,68,0.15); border-left: 4px solid var(--danger); }
+        .alert-bias strong { color: var(--danger); }
+
+        .action-category { font-size: var(--font-sm); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: var(--sp-2) 0; margin-top: var(--sp-4); border-bottom: 1px solid var(--border-color); }
+        .action-category:first-child { margin-top: 0; }
+        .action-category.quick-win { color: var(--success); }
+        .action-category.mid-term { color: var(--accent); }
+        .action-category.long-term { color: var(--warning); }
+        .action-item { padding: var(--sp-3) 0; border-bottom: 1px solid var(--border-color); display: flex; gap: var(--sp-3); font-size: var(--font-sm); }
+        .action-item:last-child { border-bottom: none; }
+
+        .footer { text-align: center; padding: var(--sp-8); color: var(--text-muted); font-size: 0.75rem; border-top: 1px solid var(--border-color); }
+        @media print { .header, .theme-toggle, .section-toggle { display: none !important; } .section.collapsed .section-body { display: block !important; } body { background: white; color: black; } }
+        @media (max-width: 768px) { .container { padding: var(--sp-4); } .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div>
+                <div class="header-title">电商用户行为分析报告</div>
+                <div class="header-subtitle">生成日期: 2026-03-31 · Auto EDA · 数据区间: 2025-Q4</div>
+            </div>
+            <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">🌓 主题</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">季度 GMV</div>
+                <div class="kpi-value">¥2,847万</div>
+                <div class="kpi-change positive">↑ 18.3% vs Q3</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">活跃用户</div>
+                <div class="kpi-value">34.2万</div>
+                <div class="kpi-change positive">↑ 7.1% vs Q3</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">客单价</div>
+                <div class="kpi-value">¥832</div>
+                <div class="kpi-change negative">↓ 3.2% vs Q3</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">复购率 (90天)</div>
+                <div class="kpi-value">28.4%</div>
+                <div class="kpi-change negative">↓ 5.1% vs Q3</div>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="section">
+            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="section-title">📊 核心发现摘要</div>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-body">
+                <h3 style="font-size:var(--font-4xl); font-weight:300; margin-bottom:var(--sp-4);">
+                    Top 5% 的客户贡献了 <strong style="color:var(--accent)">43%</strong> 的收入
+                </h3>
+                <p>但这些高价值客户的 90 天流失率达到 22%——是普通客户的 3 倍。挽留 1% 的 VIP 客户相当于获取 15% 的新客。</p>
+                <ul style="padding-left:var(--sp-6); margin-bottom:var(--sp-4);">
+                    <li><span class="confidence confidence-high">🟢 强证据</span> VIP 客户流失率异常：n=1,712, χ²=45.3, p<0.001, Cramér's V=0.18</li>
+                    <li><span class="confidence confidence-high">🟢 强证据</span> 周三下单客户退货率低 15%：n=89,432, OR=0.85, 95%CI[0.79,0.91]</li>
+                    <li><span class="confidence confidence-medium">🟡 弱暗示</span> 新客 7 日内未复购则 90 天留存率骤降：n=4,521, HR=2.1, 但缺少渠道控制</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Findings -->
+        <div class="section">
+            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="section-title">🔍 详细分析</div>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-body">
+                <h3>发现 1：VIP 客户流失加速 <span class="confidence confidence-high">🟢 强证据</span></h3>
+                <div class="chart-placeholder">📈 [VIP vs 普通客户 Kaplan-Meier 生存曲线 — matplotlib 生成的 base64 PNG 图表嵌入此处]</div>
+                <div class="chart-insight">VIP 客户的中位留存时间仅 142 天，显著低于普通客户的 210 天 (log-rank p<0.001)。高消费反而加速流失，可能与服务期望不匹配有关。</div>
+                <p>我们按渠道分组验证了这一发现（检查辛普森悖论）——在所有主要渠道中，VIP 流失率均高于普通客户，结论一致。</p>
+
+                <h3>发现 2：周三效应 <span class="confidence confidence-high">🟢 强证据</span></h3>
+                <div class="chart-placeholder">📊 [各星期退货率对比条形图 — 周三显著低于其他日期，用橙色高亮]</div>
+                <div class="chart-insight">周三下单的退货率 (8.2%) 比整体均值 (9.7%) 低 15%。控制了商品类目和价格段后，效应仍然显著。这可能与用户购物心理有关——中周决策更理性。</div>
+
+                <h3>发现 3：首购-复购窗口期 <span class="confidence confidence-medium">🟡 弱暗示</span></h3>
+                <div class="chart-placeholder">📉 [新客首购后天数 vs 90天留存率折线图 — 7天是明显拐点]</div>
+                <div class="chart-insight">新客在首购后 7 天内完成第二次购买的，90 天留存率为 52%；超过 7 天的仅为 24%。但此发现未控制获客渠道，渠道质量可能是混杂变量。</div>
+                <p>⚠️ 这是探索性发现，标注为 🟡 弱暗示。建议用 A/B 测试验证——对首购后 3 天未复购的用户发送定向优惠券，测量对留存的增量影响。</p>
+            </div>
+        </div>
+
+        <!-- Bias Warnings -->
+        <div class="section">
+            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="section-title">⚠️ 偏见与局限性声明</div>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-body">
+                <div class="alert alert-bias">
+                    <span class="alert-icon">⚠️</span>
+                    <div><strong>幸存者偏差</strong><br>数据仅包含仍有账户的客户。已注销账户的客户未被纳入分析，流失率可能被低估。</div>
+                </div>
+                <div class="alert alert-bias">
+                    <span class="alert-icon">⚠️</span>
+                    <div><strong>时效性限制</strong><br>数据来自 2025 Q4（含双十一大促），季节性因素可能影响结论的全年推广性。</div>
+                </div>
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div>本分析检查了性别、年龄段、地区等敏感属性分布，未发现显著的群体公平性风险。完整公平性审计超出本次分析范围。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Plan -->
+        <div class="section">
+            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="section-title">🎯 行动规划</div>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-body">
+                <div class="action-category quick-win">⚡ Quick Win（本周可执行）</div>
+                <div class="action-item"><span>🎯</span><div><strong>VIP 客户流失预警</strong><br>对最近 30 天消费下降 > 50% 的 VIP 客户，触发客服主动回访。预期影响：挽留 10% 高风险 VIP ≈ ¥120 万/季增量。</div></div>
+                <div class="action-item"><span>🎯</span><div><strong>周三促销实验</strong><br>在周三集中推送高退货率品类的限时折扣，利用"理性购物日"降低退货率。</div></div>
+
+                <div class="action-category mid-term">📅 中期（1-3 个月）</div>
+                <div class="action-item"><span>📋</span><div><strong>新客 7 天复购激励 A/B 测试</strong><br>验证"首购后 3 天优惠券"是否能提升 90 天留存率。需设计对照组。</div></div>
+                <div class="action-item"><span>📋</span><div><strong>VIP 流失根因深挖</strong><br>补充客服工单数据和 NPS 数据，分析 VIP 流失的具体原因。</div></div>
+
+                <div class="action-category long-term">🔭 长期 & 后续分析</div>
+                <div class="action-item"><span>🔭</span><div><strong>动态定价模型</strong><br>结合价格弹性分析，建立分客群的动态定价策略。</div></div>
+
+                <div class="alert alert-warning" style="margin-top:var(--sp-6);">
+                    <span class="alert-icon">❓</span>
+                    <div><strong>未回答的问题</strong>
+                        <ul style="padding-left:var(--sp-4); margin-top:var(--sp-2);">
+                            <li>VIP 流失是因为服务不达预期，还是竞品引流？→ 需要竞品数据</li>
+                            <li>周三效应是否在不同季节都存在？→ 需要更长时间跨度数据</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <span class="alert-icon">📊</span>
+                    <div><strong>建议持续监控</strong>
+                        <ul style="padding-left:var(--sp-4); margin-top:var(--sp-2);">
+                            <li>VIP 30 天流失率 — 每周 — 预警 > 25%</li>
+                            <li>新客 7 日复购率 — 每周 — 预警 < 15%</li>
+                            <li>整体退货率 — 每日 — 预警 > 12%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appendix -->
+        <div class="section collapsed">
+            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="section-title">📎 附录：技术细节</div>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-body">
+                <p><strong>数据源</strong>：orders_2025q4.csv (89,432 行 × 24 列) + customers.csv (34,218 行 × 12 列)</p>
+                <p><strong>数据清洗</strong>：删除 312 行重复订单 (0.3%)，填充 1,204 个缺失地区值 (众数填充)，winsorize 金额列 (1%/99%)</p>
+                <p><strong>统计方法</strong>：Kaplan-Meier 生存分析 + Log-rank 检验 + 卡方检验 + Logistic 回归 + Bootstrap 置信区间</p>
+                <p><strong>偏见检查</strong>：每个发现均检查辛普森悖论（分渠道/地区分组验证）、混杂变量（控制价格段和品类）、多重比较（3 次检验，Bonferroni 校正后均显著）</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Auto EDA · 电商用户行为分析报告 · 2026-03-31</p>
+        <p>本报告自动生成，所有结论附带信心等级标注，请结合业务判断使用。</p>
+    </footer>
+</body>
+</html>
